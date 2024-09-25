@@ -1,0 +1,152 @@
+##############  mail server   IRedMail ###########
+# https://umitturanli.com.tr/iredmail-kurulumu-ve-yapilandirmasi-nasil-yapilir/
+# https://www.mshowto.org/linux-iredmail-server-kurulumu-nasil-yapilir.html
+
+sudo apt update && sudo apt upgrade -y
+
+sudo apt install -y curl wget unzip net-tools dnsutils
+
+nano /etc/hostname
+
+mail
+
+nano /etc/hosts
+
+127.0.0.1 localhost
+
+127.0.1.1 mail.test.com mail
+
+127.0.0.1 mail.test.com mail localhost localhost.localdomain  # hostname -f yaptığınızda sonuç olarak mail.alanadınız.com görmüyorsanız sunucuyu reboot edelim.
+
+ hostname –fqdn   #  test
+
+mkdir /iredmail
+cd /iredmail
+
+wget https://github.com/iredmail/iRedMail/archive/refs/tags/1.6.2.tar.gz
+tar zxf iRedMail-x.y.z.tar.gz
+cd /root/iRedMail-x.y.z/
+bash iRedMail.sh                     # 5-15 dakika kadar sürebilecektir.
+
+
+
+Default mail storage path      :   (Varsayılan olarak /var/vmail klasörü gelmektedir)
+Choose default web server      :   İlgili alanda varsayılan web sunucusu seçilmelidir.  Nginx ve Apache
+MySQL / Mariadb                :   kullanıcısı için parolayı tanımlayınız.
+Your first virtual domain name :   alanından domain adınızı tanımlayınız. Bundan sonra eklenecek domainler web arayüzünden eklenebilir.
+                                   Az önce eklemiş olduğumuz domain adı için ” postmaster ” e-posta kullanıcı parolasını tanımlayınız.
+								 
+Optional components : Tüm bileşenleri kurmanızı öneririz.
+
+Configuration complated : Konfigurasyon işlemleri tamamlandı. İlgili ekrandaki soruları ” Y “e tuşlayarak onaylayınız.
+
+**************************** WARNING ***********************************
+*************************************************************************
+* *
+* Below file contains sensitive infomation (username/password), please *
+* do remember to *MOVE* it to a safe place after installation. *
+* *
+* * /var/www/html/webmail/iRedMail-0.9.0/config
+* *
+*************************************************************************
+< Question > Continue? [y|N]y
+
+< Question > Would you like to use firewall rules provided by iRedMail?
+< Question > File: /etc/default/iptables, with SSHD port: 22. [Y|n]Y
+< INFO > Copy firewall sample rules: /etc/default/iptables.
+< Question > Restart firewall now (with SSHD port 22)? [y|N]y
+
+Kurulum tamamlandı 🙂
+
+Webmail:
+
+mail.alanadınız.com
+
+Admin Panel:
+
+mail.alanadınız.com/iredadmin
+
+
+#########################################################################################################
+# https://www.classbilisim.com.tr/index.php?rp=/knowledgebase/132/Ubuntu-20.0418.04-uzerine-iRedMail-kurulumu.html
+
+
+sudo apt -y update
+sudo apt -y upgrade
+
+sudo systemctl reboot
+
+export HOSTNAME="email.classbilisim.com"
+sudo hostnamectl set-hostname $HOSTNAME --static
+sudo hostnamectl set-hostname $HOSTNAME --transient
+
+$ sudo nano /etc/hosts
+188.40.225.2 mail.hirebestengineers.com
+
+
+sudo apt -y install dnsutils    # DNS çözümlemesini sağlamak için önce dns-utils paketini kurun.
+
+sudo apt -y install wget
+
+https://github.com/iredmail/iRedMail/archive/refs/tags/1.5.1.tar.gz
+
+tar xvf 1.5.1.tar.gz
+
+cd iRedMail-*/
+
+sudo chmod +x iRedMail.sh
+
+sudo ./iRedMail.sh
+
+
+
+
+sudo apt install software-properties-common
+sudo add-apt-repository ppa:certbot/certbot -y
+sudo apt install certbot -y
+
+
+sudo certbot certonly --webroot --agree-tos --email you@example.com -d mail.your-domain.com -w /var/www/html/
+
+sudo nano /etc/nginx/sites-enabled/00-default.conf
+
+                # kare işaretini silelim..
+
+listen [::]:80;
+
+                # Kaydedelim ve sonrasında diğer dosyaya geçelim 
+
+sudo nano /etc/nginx/sites-enabled/00-default-ssl.conf
+
+                # Eğer dosyanın içinde aşağıdaki gibi http2 yoksa ekleyelim.
+listen 443 ssl http2;
+listen [::]:443 ssl http2;
+
+
+
+sudo nginx -t
+sudo systemctl reload nginx 
+                # TLS sertifikası almak için aşağıdaki komutu tekrar çalıştırın.
+sudo certbot certonly --webroot --agree-tos --email you@example.com -d mail.your-domain.com -w /var/www/html/
+
+
+sudo nano /etc/nginx/templates/ssl.tmpl
+                # Aşağıdaki 2 satırı bulun.
+ssl_certificate /etc/ssl/certs/iRedMail.crt;
+ssl_certificate_key /etc/ssl/private/iRedMail.key;
+                 
+				 # Bunları şununla değiştirin:
+ssl_certificate /etc/letsencrypt/live/mail.your-domain.com/fullchain.pem;
+ssl_certificate_key /etc/letsencrypt/live/mail.your-domain.com/privkey.pem;
+
+
+                  # Dosyayı kaydedin ve kapatın. Ardından nginx yapılandırmasını test edin ve yeniden yükleyin.
+
+sudo nginx -t
+
+sudo systemctl reload nginx
+
+                    # Sunucuyu yeniden başlatalım. Başarılı bir şekilde kurulum tamamlamış ssl yapılandırılmış olduk.
+					
+					
+					
