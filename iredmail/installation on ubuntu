@@ -4,7 +4,7 @@
 
 sudo apt update && sudo apt upgrade -y
 
-sudo apt install -y curl wget unzip net-tools dnsutils
+sudo apt install -y curl wget unzip net-tools dnsutils gzip dialog
 
 nano /etc/hostname
 
@@ -23,7 +23,7 @@ nano /etc/hosts
 mkdir /iredmail
 cd /iredmail
 
-wget https://github.com/iredmail/iRedMail/archive/refs/tags/1.6.2.tar.gz
+wget https://github.com/iredmail/iRedMail/archive/refs/tags/1.7.1.tar.gz
 tar zxf iRedMail-x.y.z.tar.gz
 cd /root/iRedMail-x.y.z/
 bash iRedMail.sh                     # 5-15 dakika kadar sürebilecektir.
@@ -71,8 +71,7 @@ mail.alanadınız.com/iredadmin
 # https://www.classbilisim.com.tr/index.php?rp=/knowledgebase/132/Ubuntu-20.0418.04-uzerine-iRedMail-kurulumu.html
 
 
-sudo apt -y update
-sudo apt -y upgrade
+sudo apt -y update && sudo apt -y upgrade
 
 sudo systemctl reboot
 
@@ -84,13 +83,13 @@ $ sudo nano /etc/hosts
 188.40.225.2 mail.hirebestengineers.com
 
 
-sudo apt -y install dnsutils    # DNS çözümlemesini sağlamak için önce dns-utils paketini kurun.
+   # DNS çözümlemesini sağlamak için önce dns-utils paketini kurun.
 
-sudo apt -y install wget
+sudo apt -y install curl wget unzip net-tools dnsutils gzip dialog
 
-https://github.com/iredmail/iRedMail/archive/refs/tags/1.5.1.tar.gz
+https://github.com/iredmail/iRedMail/archive/refs/tags/1.7.1.tar.gz
 
-tar xvf 1.5.1.tar.gz
+tar xvf 1.7.1.tar.gz
 
 cd iRedMail-*/
 
