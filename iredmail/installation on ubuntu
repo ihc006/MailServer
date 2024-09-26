@@ -6,6 +6,8 @@ sudo apt update && sudo apt upgrade -y
 
 sudo apt install -y curl wget unzip net-tools dnsutils gzip dialog
 
+sudo hostnamectl set-hostname mail.test.com
+
 nano /etc/hostname
 
 mail
@@ -75,6 +77,8 @@ sudo apt -y update && sudo apt -y upgrade
 
 sudo systemctl reboot
 
+
+sudo hostnamectl set-hostname mail.test.com
 export HOSTNAME="email.classbilisim.com"
 sudo hostnamectl set-hostname $HOSTNAME --static
 sudo hostnamectl set-hostname $HOSTNAME --transient
