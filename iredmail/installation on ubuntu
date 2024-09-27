@@ -151,5 +151,196 @@ sudo systemctl reload nginx
 
                     # Sunucuyu yeniden başlatalım. Başarılı bir şekilde kurulum tamamlamış ssl yapılandırılmış olduk.
 					
-					
-					
+#########################################################################################################
+# https://www.kodkoda.com/t/iredmail-ile-ubuntu-18-04te-posta-sunucusu-kurulumu-yapilandirmasi/199
+#  kodkoda iRedMail-kurulumu.html
+
+
+$ sudo apt -y update && sudo apt -y upgrade
+
+$ sudo hostnamectl set-hostname mail.test.com
+$ sudo systemctl reboot
+
+$ sudo nano /etc/hostname
+mail.dijicamp.com
+
+$ sudo cat /etc/hosts
+127.0.0.1 localhost
+127.0.1.1 mail.dijicamp.com dijicamp.com dijicamp        # hostname -f yaptığınızda sonuç olarak mail.alanadınız.com görmüyorsanız sunucuyu reboot edelim.
+
+$ sudo hostname –fqdn   #  test
+
+$ export HOSTNAME="mail.dijicamp.com"
+$ sudo hostnamectl set-hostname $HOSTNAME --static
+$ sudo hostnamectl set-hostname $HOSTNAME --transient
+
+$ sudo apt -y update && sudo apt -y upgrade
+
+$  sudo mkdir /iredmail
+$ cd /iredmail
+
+
+
+   # DNS çözümlemesini sağlamak için önce dns-utils paketini kurun.
+
+$ sudo apt -y install curl wget unzip net-tools dnsutils gzip dialog
+
+$ sudo wget https://github.com/iredmail/iRedMail/archive/refs/tags/1.7.1.tar.gz
+
+$ sudo tar xvf 1.7.1.tar.gz
+
+$ cd iRedMail-*/
+
+$ sudo chmod +x iRedMail.sh
+
+$ sudo ./iRedMail.sh
+
+
+           # ssl activation
+
+$ sudo apt install software-properties-common -y
+$ sudo add-apt-repository ppa:certbot/certbot -y
+
+$ sudo apt -y update
+
+$ sudo apt install certbot -y
+
+
+$ sudo certbot certonly --webroot --agree-tos --email ramacar@gmail.com -d mail.dijicamp.com -w /var/www/html/
+
+$ sudo nano /etc/nginx/sites-enabled/00-default.conf
+
+                # kare işaretini silelim..
+
+listen [::]:80;
+
+                # Kaydedelim ve sonrasında diğer dosyaya geçelim 
+
+sudo nano /etc/nginx/sites-enabled/00-default-ssl.conf
+
+                # Eğer dosyanın içinde aşağıdaki gibi http2 yoksa ekleyelim.
+listen 443 ssl http2;
+listen [::]:443 ssl http2;   # bu satiri ekledik
+
+
+
+$ sudo nginx -t
+
+$ sudo systemctl reload nginx 
+                # TLS sertifikası almak için aşağıdaki komutu tekrar çalıştırın.
+sudo certbot certonly --webroot --agree-tos --email you@example.com -d mail.your-domain.com -w /var/www/html/
+
+
+$ sudo nano /etc/nginx/templates/ssl.tmpl
+                # Aşağıdaki 2 satırı bulun.
+ssl_certificate /etc/ssl/certs/iRedMail.crt;
+ssl_certificate_key /etc/ssl/private/iRedMail.key;
+                 
+				 # Bunları şununla değiştirin:
+ssl_certificate /etc/letsencrypt/live/mail.your-domain.com/fullchain.pem;
+ssl_certificate_key /etc/letsencrypt/live/mail.your-domain.com/privkey.pem;
+
+
+                  # Dosyayı kaydedin ve kapatın. Ardından nginx yapılandırmasını test edin ve yeniden yükleyin.
+
+$ sudo nginx -t
+
+$ sudo systemctl reload nginx
+
+
+                    # Sunucuyu yeniden başlatalım. Başarılı bir şekilde kurulum tamamlamış ssl yapılandırılmış olduk.
+										
+          # Postfix ve Dovecot’a TLS sertifikasını yükleyin
+
+$ sudo nano /etc/postfix/main.cf
+
+smtpd_tls_key_file = /etc/letsencrypt/live/mail.sizinalanadiniz.com/privkey.pem
+smtpd_tls_cert_file = /etc/letsencrypt/live/mail.sizinalanadiniz.com/cert.pem
+smtpd_tls_CAfile = /etc/letsencrypt/live/mail.sizinalanadiniz.com/chain.pem
+
+$ sudo systemctl reload postfix
+
+
+$ sudo nano /etc/dovecot/dovecot.conf
+    #Bu satirlari
+ssl_cert = </etc/ssl/certs/iRedMail.crt
+ssl_key = </etc/ssl/private/iRedMail.key
+   # bunlar ile degistirin
+
+ssl_cert = </etc/letsencrypt/live/mail.sizinalanadiniz.com/fullchain.pem
+ssl_key = </etc/letsencrypt/live/mail.sizinalanadiniz.com/privkey.pem
+
+$ sudo systemctl reload dovecot
+
+
+############ Kotroller  ###################
+*** DKIM Kaydı***
+
+$ sudo amavisd-new showkeys 
+
+Örnek çıktı:
+
+; key#1 2048 bits, i=dkim, d=sizinalanadiniz.com, /var/lib/dkim/sizinalanadiniz.com.pem
+dkim._domainkey.sizinalanadiniz.com.    3600 TXT (
+  "v=DKIM1; p="
+  "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAushN12z+XYCwmB+9ybgq"
+  "6OAU5Mnpta5NiBgVUqnvrFCD16A72hoVt5N8kruNy4xXbs/ybAEqewGXJDtqpRz9"
+  "kpxkQogca/jlU4PMoKcptuMW9FMbDjoXNAO5qfnTjyDTPkWBjIohd+ICWUoHiHwC"
+  "DTb+dhPR9Co4PPEIeLHIYEnpBWd0iNSXS6qEzZWUzBk1Yb4jXgZE7sbcyBvumJl/"
+  "V6HopUBHhg5LXmW/DGHjG+H2B8uSASBYlbH9qFEQC/D78OYI69je79buOBPpF6EP"
+  "3v41G0e8qto31UgET76g7n82H1bXLHM0HG4ZUYWSSy1QVL5ibLl257PsvyAoFXvM"
+  "gwIDAQAB")
+
+  # DNS yöneticinizde bir TXT kaydı oluşturun, ad alanına dkim._domainkey yazın. 
+  # Parantez içindeki her şeyi kopyalayın ve değer alanına yapıştırın. Tüm çift tırnak ve satır sonlarını silin.
+
+*** PTR kaydı ***
+
+ # Bir PTR kaydı, bir IP adresini FQDN (tam etki alanı adı) ile eşleştirir. A kaydının karşılığı ve SPAM gönderenleri engellemeye yardımcı olabilecek ters DNS araması için kullanılır. 
+ # Gönderen sunucuda PTR kaydı bulunmazsa, birçok SMTP sunucusu e-postaları reddeder.
+ # Bir IP adresi için PTR kaydını kontrol etmek için şu komutu çalıştırın:
+
+$ dig -x 49.12.34.61 +short    #  Olmadi ??????
+
+mail.sizinalanadiniz.com
+
+
+*** SPF kaydı ***
+
+# SPF (Sender Policy Framework) kaydı, hangi ana bilgisayarların veya 
+# IP adresinin bir etki alanı adına e-posta göndermesine izin verileceğini belirtir. 
+# Yalnızca kendi e-posta sunucunuzun etki alanınız için e-posta göndermesine izin vermelisiniz. 
+# DNS yönetim arayüzünüzde, aşağıdaki gibi yeni bir TXT kaydı oluşturun.
+
+
+v=spf1 mx ~all
+
+
+# TXT bu değerin bir TXT kaydı olduğunu gösterir.
+# Ana etki alanı adını temsil etmek için ad alanına @ işaretini girin.
+# v = spf1, bunun bir SPF kaydı olduğunu ve sürümün SPF1 olduğunu gösterir.
+# mx , MX kayıtlarında listelenen tüm ana bilgisayarların etki alanınız için e-posta göndermesine izin verildiği ve diğer tüm ana bilgisayarların izin verilmediği anlamına gelir.
+# ~all , alan adınızdan gelen e-postaların yalnızca SPF kaydında belirtilen ana bilgisayarlardan gelmesi gerektiğini gösterir. Diğer ana bilgisayarlardan gelen e-postalar sahte olarak işaretlenir.
+# SPF kaydınızın genel internete yayılıp yayılmadığını kontrol etmek için, aşağıdaki gibi Linux makinenizdeki dig yardımcı programını kullanabilirsiniz:
+
+$ dig sizinalanadiniz.com txt   # ok
+
+
+
+*** DMARC kaydı ***
+ # DMARC (Etki alanı tabanlı ileti kimlik doğrulaması) e-postaları tanımlamak ve alan adınızın e-posta sahtekarlığı ile 
+ # kullanılmasını önlemek için yardımcı olur.
+ # Bir DMARC kaydı oluşturmak için DNS yöneticinize gidin ve bir TXT kaydı ekleyin. 
+ # Ad alanına _dmarc girin. Değer alanına aşağıdakileri girin:
+
+
+v=DMARC1; p=none; pct=100; rua=mailto:dmarc-reports@sizinalanadiniz.com
+
+####  Let’s Encrypt sertifikasının otomatik olarak yenilenmesini #####
+
+$ sudo certbot renew  
+
+$ sudo certbot renew --dry-run    # yenilemeyi test etmek icin 
+
+
+
